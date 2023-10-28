@@ -6,6 +6,7 @@ It can be easily extend with additional collections.
 ## Usage
 
 - Update the `init/data.json` file with your data.
+- Update the `init/mongo-init.js` file with your config:
   - Name of database
   - Name of collection
   - Username for database
