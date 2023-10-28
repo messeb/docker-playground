@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  
+  lb:
+    image: haproxy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./haproxy:/usr/local/etc/haproxy
+  
+  web001:
+    build: ./webserver
+    environment:
+      - INSTANCE=web001
+
+  web002:
+    build: ./webserver
+    environment:
+      - INSTANCE=web002

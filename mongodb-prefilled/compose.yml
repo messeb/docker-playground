@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  mongo:
+    image: mongo:latest
+    restart: always
+    env_file: .env
+    ports:
+      - 27017:27017
+    volumes:
+      - ./init/:/docker-entrypoint-initdb.d/:ro
+      - ./mongodb:/data/db
