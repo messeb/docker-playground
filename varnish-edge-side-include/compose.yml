@@ -1,0 +1,36 @@
+# docker-compose.yml
+version: '3'
+
+services:
+  nginx:
+    build: 
+      context: ./index
+    volumes:
+      - ./index/index.html:/usr/share/nginx/html/index.html
+    networks:
+      - varnish-net
+
+  components:
+    build:
+      context: ./components
+    volumes:
+      - ./components/index.html:/usr/share/nginx/html/index.html
+    networks:
+      - varnish-net
+
+  varnish:
+    image: varnish:latest
+    volumes:
+      - ./varnish/varnish.vcl:/etc/varnish/default.vcl
+    depends_on:
+      - nginx
+      - components
+    ports:
+      - "8080:8080"
+    command: varnishd -F -f /etc/varnish/default.vcl -s malloc,256M -a 0.0.0.0:8080
+    networks:
+      - varnish-net
+
+networks:
+  varnish-net:
+    driver: bridge
