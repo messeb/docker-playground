@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  postgresql-write:
+    image: bitnami/postgresql:latest
+    container_name: postgresql-write
+    restart: always
+    ports:
+      - '5432:5432'
+    env_file:
+      - ./postgresql-write/.env
+    volumes:
+      - ./postgresql-write/db-init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  postgresql-read-replica-1:
+    image: bitnami/postgresql:latest
+    container_name: postgresql-read-replica-1
+    restart: always
+    ports:
+      - '5433:5432'
+    depends_on:
+      - postgresql-write
+    env_file:
+      - ./postgresql-read/.env
+  
+  postgresql-read-replica-2:
+    image: bitnami/postgresql:latest
+    container_name: postgresql-read-replica-2
+    restart: always
+    ports:
+      - '5434:5432'
+    depends_on:
+      - postgresql-write
+    env_file:
+      - ./postgresql-read/.env
+
+  client:
+    build: ./client
+    ports:
+      - "8080:8080"
