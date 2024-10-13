@@ -10,3 +10,4 @@ Small Docker playgrounds for my daily work.
 | HAProxy as HTTP Loadbalancer | Loadbalancer for multiple http web servers | [Link](./haproxy-http-loadbalancer/)
 | Varnish ESI | Varnish Edge Side Include example | [Link](./varnish-edge-side-include/)
 | PostgreSQL Replica | PostgreSQL with 2 read replicas | [Link](./postgresql-db-replicas/)
+| Secure Docker Container | Security best practices for Docker container | [Link](./secure-docker-container/)
