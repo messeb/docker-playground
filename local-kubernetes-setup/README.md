@@ -51,8 +51,26 @@ git clone --filter=blob:none --sparse https://github.com/messeb/docker-playgroun
 
 ## Prerequisites
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) — must be running, 4 GB memory recommended
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Podman](https://podman.io) — must be running, 4 GB memory recommended
 - [Homebrew](https://brew.sh) — `kind` and `kubectl` are installed automatically
+
+## Container engine
+
+Docker is used by default if its daemon is running. Podman is used automatically when Docker is not available. You can also force a specific engine:
+
+```bash
+# Force podman for the full lifecycle
+export CONTAINER_ENGINE=podman
+make start
+make deploy
+make teardown
+```
+
+Or per-command:
+
+```bash
+CONTAINER_ENGINE=podman make start
+```
 
 ---
 

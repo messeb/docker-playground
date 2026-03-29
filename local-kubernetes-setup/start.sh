@@ -6,12 +6,28 @@ CLUSTER_NAME="local"
 ARGOCD_NAMESPACE="argocd"
 KUBECTL="kubectl --context kind-${CLUSTER_NAME}"
 
+# Detect container engine (respect CONTAINER_ENGINE env var if set)
+if [ -z "${CONTAINER_ENGINE:-}" ]; then
+  if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+    CONTAINER_ENGINE="docker"
+  elif command -v podman &>/dev/null; then
+    CONTAINER_ENGINE="podman"
+  else
+    echo "ERROR: Neither docker nor podman found or running." >&2
+    exit 1
+  fi
+fi
+if [ "${CONTAINER_ENGINE}" = "podman" ]; then
+  export KIND_EXPERIMENTAL_PROVIDER=podman
+fi
+echo "Using container engine: ${CONTAINER_ENGINE}"
+
 # Start local registry (idempotent)
-if docker inspect kind-registry &>/dev/null; then
+if ${CONTAINER_ENGINE} inspect kind-registry &>/dev/null; then
   echo "Local registry already running — skipping."
 else
   echo "Starting local registry on port 5001..."
-  docker run -d \
+  ${CONTAINER_ENGINE} run -d \
     --name kind-registry \
     --restart=always \
     -p 5001:5000 \
@@ -30,11 +46,11 @@ fi
 kind export kubeconfig --name "${CLUSTER_NAME}"
 
 # Connect registry to kind network (idempotent)
-if docker network inspect kind | grep -q "kind-registry"; then
+if ${CONTAINER_ENGINE} network inspect kind | grep -q "kind-registry"; then
   echo "Registry already connected to kind network."
 else
   echo "Connecting registry to kind network..."
-  docker network connect kind kind-registry
+  ${CONTAINER_ENGINE} network connect kind kind-registry
 fi
 
 # Install ArgoCD (idempotent)

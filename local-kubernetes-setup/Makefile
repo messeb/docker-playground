@@ -13,7 +13,9 @@ help:
 deps:
 	@echo "Installing dependencies..."
 	@command -v brew >/dev/null 2>&1 || { echo "ERROR: Homebrew not found. Install it from https://brew.sh"; exit 1; }
-	@command -v docker >/dev/null 2>&1 || { echo "ERROR: Docker not found. Install Docker Desktop first."; exit 1; }
+	@(command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1) || \
+	  command -v podman >/dev/null 2>&1 || \
+	  { echo "ERROR: Neither Docker nor Podman found. Install Docker Desktop or Podman first."; exit 1; }
 	@command -v kind >/dev/null 2>&1 && echo "kind already installed." || brew install kind
 	@command -v kubectl >/dev/null 2>&1 && echo "kubectl already installed." || brew install kubectl
 	@echo "All dependencies ready."

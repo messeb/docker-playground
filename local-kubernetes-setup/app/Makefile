@@ -3,6 +3,9 @@ IMAGE_NAME = myapp
 IMAGE_TAG  = latest
 IMAGE      = $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 
+CONTAINER_ENGINE ?= $(shell (command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && echo docker) || (command -v podman >/dev/null 2>&1 && echo podman) || echo docker)
+PUSH_FLAGS       = $(if $(filter podman,$(CONTAINER_ENGINE)),--tls-verify=false,)
+
 .PHONY: build deploy serve-local help
 
 help:
@@ -12,8 +15,8 @@ help:
 	@echo "  make serve-local  Serve this repo via ngrok and update ArgoCD"
 
 build:
-	docker build -t $(IMAGE) .
-	docker push $(IMAGE)
+	$(CONTAINER_ENGINE) build -t $(IMAGE) .
+	$(CONTAINER_ENGINE) push $(PUSH_FLAGS) $(IMAGE)
 
 deploy:
 	$(eval BUILD_ID  := $(shell openssl rand -hex 4))
@@ -23,12 +26,12 @@ deploy:
 	@echo "   📦 Build:  $(BUILD_ID)"
 	@echo "   🕐 Date:   $(TIMESTAMP)"
 	@echo ""
-	@docker build \
+	@$(CONTAINER_ENGINE) build \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		--build-arg BUILD_DATE="$(TIMESTAMP)" \
 		-t $(IMAGE) . -q >/dev/null
-	@echo "   ✅ Docker image built"
-	@docker push $(IMAGE) -q >/dev/null
+	@echo "   ✅ Image built"
+	@$(CONTAINER_ENGINE) push $(PUSH_FLAGS) $(IMAGE) -q >/dev/null
 	@echo "   ✅ Image pushed → $(IMAGE)"
 	@sed -i '' 's/deploy-id: ".*"/deploy-id: "$(BUILD_ID)"/' apps/deployment.yaml
 	@echo "   ✅ deployment.yaml patched"
