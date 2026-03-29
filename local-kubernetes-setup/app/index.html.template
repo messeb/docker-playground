@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>myapp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f4f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1a1a2e;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 56px 64px;
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 20px 48px rgba(0,0,0,0.08);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #16a34a;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 32px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #0f0f1a;
+      margin-bottom: 6px;
+    }
+
+    .tagline {
+      color: #9ca3af;
+      font-size: 15px;
+      margin-bottom: 48px;
+    }
+
+    .release-block {
+      background: #fafaf9;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .release-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .release-number {
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #6c47ff;
+      line-height: 1;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    .date-block {
+      background: #fafaf9;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px 32px;
+    }
+
+    .date-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .date-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #374151;
+      letter-spacing: -0.01em;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    .footer {
+      margin-top: 36px;
+      font-size: 13px;
+      color: #d1d5db;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="status">
+      <span class="status-dot"></span>
+      Deployed &amp; running
+    </div>
+
+    <h1>Hey there! 👋</h1>
+    <p class="tagline">Your app is live via GitOps &mdash; ArgoCD + kind</p>
+
+    <div class="release-block">
+      <div class="release-label">Release</div>
+      <div class="release-number">{buildnumber}</div>
+    </div>
+
+    <div class="date-block">
+      <div class="date-label">Deployed on</div>
+      <div class="date-value">{builddate}</div>
+    </div>
+
+    <p class="footer">Built locally &middot; pushed to kind &middot; zero downtime</p>
+  </div>
+</body>
+</html>
