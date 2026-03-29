@@ -1,0 +1,65 @@
+services:
+
+  # ── RabbitMQ broker ───────────────────────────────────────────────────────
+  # rabbitmq:3-management-alpine includes the web management UI on port 15672.
+  # The healthcheck ensures producer and consumer only start once the broker
+  # is fully ready to accept connections.
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rmq-broker
+    restart: unless-stopped
+    ports:
+      - "5672:5672"     # AMQP — used by producer and consumer
+      - "15672:15672"   # Management UI — http://localhost:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rmq-net
+
+  # ── Producer ──────────────────────────────────────────────────────────────
+  # Sends MESSAGE_COUNT messages to the queue, one every MESSAGE_DELAY seconds,
+  # then exits. restart: "no" prevents it from looping indefinitely.
+  producer:
+    build: ./producer
+    container_name: rmq-producer
+    restart: "no"
+    environment:
+      RABBITMQ_HOST: rabbitmq     # resolves to the broker container via Docker DNS
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+      QUEUE_NAME: messages
+      MESSAGE_COUNT: "20"
+      MESSAGE_DELAY: "1"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy  # wait for broker healthcheck before starting
+    networks:
+      - rmq-net
+
+  # ── Consumer ──────────────────────────────────────────────────────────────
+  # Subscribes to the queue and processes messages as they arrive.
+  # Runs until stopped — use 'docker compose down' or CTRL+C.
+  consumer:
+    build: ./consumer
+    container_name: rmq-consumer
+    restart: unless-stopped
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+      QUEUE_NAME: messages
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rmq-net
+
+networks:
+  rmq-net:
+    name: rmq-net
