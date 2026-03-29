@@ -1,0 +1,119 @@
+services:
+
+  # ── Elasticsearch ──────────────────────────────────────────────────────────
+  # Single-node cluster with security enabled. A single node stays "yellow"
+  # (no replica placement possible), so healthchecks use ?wait_for_status=yellow.
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: otel-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL",
+             "curl -sf -u elastic:${ELASTIC_PASSWORD} 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s'"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+  # ── Setup ──────────────────────────────────────────────────────────────────
+  # One-shot container that sets the kibana_system user password after
+  # Elasticsearch is healthy. Kibana depends on this completing successfully.
+  #
+  # Uses list-form entrypoint (not a string) so Docker runs bash directly
+  # without an extra sh -c wrapper. The | block scalar preserves newlines so
+  # the retry loop works correctly.
+  # Retries until the API returns {} — Elasticsearch may accept connections
+  # before the security API is fully ready.
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: otel-setup
+    restart: "no"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    entrypoint:
+      - bash
+      - -c
+      - |
+        until curl -sf \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -X POST "http://elasticsearch:9200/_security/user/kibana_system/_password" \
+          -H "Content-Type: application/json" \
+          -d "{\"password\":\"${KIBANA_SYSTEM_PASSWORD}\"}" \
+          | grep -q "^{}"; do
+          echo "kibana_system password not accepted yet — retrying in 5s"
+          sleep 5
+        done
+        echo "kibana_system password set successfully"
+
+  # ── Kibana ────────────────────────────────────────────────────────────────
+  # Login: elastic / ${ELASTIC_PASSWORD}  (see .env)
+  # APM UI: http://localhost:5601/app/apm
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: otel-kibana
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+    ports:
+      - "5601:5601"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5601/api/status | grep -q available"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+
+  # ── APM Server ────────────────────────────────────────────────────────────
+  # Receives OTLP traces from the Spring app and indexes them in Elasticsearch.
+  # Config is passed via -E flags (the APM server's standard override mechanism).
+  # Anonymous auth is enabled so the Spring app needs no secret token.
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:${STACK_VERSION}
+    container_name: otel-apm-server
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command: >
+      apm-server -e
+        -E apm-server.host=0.0.0.0:8200
+        -E apm-server.auth.anonymous.enabled=true
+        -E setup.template.settings.index.number_of_replicas=0
+        -E output.elasticsearch.hosts=["http://elasticsearch:9200"]
+        -E output.elasticsearch.username=elastic
+        -E output.elasticsearch.password=${ELASTIC_PASSWORD}
+    ports:
+      - "8200:8200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8200/ | grep -q publish_ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # ── Spring App ────────────────────────────────────────────────────────────
+  # Sends OTLP traces to the APM server via HTTP.
+  # MANAGEMENT_OTLP_TRACING_ENDPOINT overrides application.properties.
+  # Does NOT wait for the APM server to be healthy — Micrometer's OTLP exporter
+  # retries silently, so traces start flowing as soon as the APM server is ready.
+  app:
+    build: .
+    container_name: otel-app
+    restart: unless-stopped
+    depends_on:
+      apm-server:
+        condition: service_started
+    environment:
+      - MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-apm-server:8200/v1/traces
+      - MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0
+    ports:
+      - "8080:8080"
