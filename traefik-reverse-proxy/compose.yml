@@ -1,0 +1,33 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - proxy
+
+  service-a:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./service-a/html:/usr/share/nginx/html:ro
+    networks:
+      - proxy
+
+  service-b:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./service-b/html:/usr/share/nginx/html:ro
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: proxy

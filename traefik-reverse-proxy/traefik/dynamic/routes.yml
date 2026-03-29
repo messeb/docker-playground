@@ -1,0 +1,39 @@
+http:
+  routers:
+    service-a:
+      rule: "PathPrefix(`/service-a`)"
+      entryPoints:
+        - web
+      middlewares:
+        - strip-service-a
+      service: service-a
+
+    service-b:
+      rule: "PathPrefix(`/service-b`)"
+      entryPoints:
+        - web
+      middlewares:
+        - strip-service-b
+      service: service-b
+
+  middlewares:
+    strip-service-a:
+      stripPrefix:
+        prefixes:
+          - /service-a
+
+    strip-service-b:
+      stripPrefix:
+        prefixes:
+          - /service-b
+
+  services:
+    service-a:
+      loadBalancer:
+        servers:
+          - url: "http://service-a:80"
+
+    service-b:
+      loadBalancer:
+        servers:
+          - url: "http://service-b:80"
