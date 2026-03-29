@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.0</version>
+		<version>4.0.4</version>
 		<relativePath/>
 	</parent>
 
@@ -16,7 +16,7 @@
 	<description>Spring Boot + OpenTelemetry + Elastic APM demo</description>
 
 	<properties>
-		<java.version>23</java.version>
+		<java.version>25</java.version>
 	</properties>
 
 	<dependencies>
@@ -33,24 +33,13 @@
 		</dependency>
 
 		<!--
-		  Micrometer Tracing bridge for OpenTelemetry.
-		  This is the Spring Boot 3.x way to do distributed tracing — it wires
-		  Micrometer's Observation API to the OpenTelemetry SDK so every HTTP
-		  request is automatically traced without a Java agent.
+		  Spring Boot 4.x OpenTelemetry starter — consolidates Micrometer tracing
+		  bridge and the OTLP exporter. Replaces the separate
+		  micrometer-tracing-bridge-otel + opentelemetry-exporter-otlp deps from 3.x.
 		-->
 		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-otel</artifactId>
-		</dependency>
-
-		<!--
-		  OTLP HTTP exporter — sends spans to any OTLP-compatible backend
-		  (Elastic APM Server, OpenTelemetry Collector, Jaeger, etc.).
-		  Version is managed by the Spring Boot BOM.
-		-->
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporter-otlp</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-opentelemetry</artifactId>
 		</dependency>
 
 		<dependency>

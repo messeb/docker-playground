@@ -65,7 +65,6 @@ public class MyController {
      */
     @GetMapping("/error")
     public Map<String, String> error() {
-        log.error("error endpoint triggered — throwing exception");
         throw new RuntimeException("Simulated error — check APM Errors tab for the stack trace");
     }
 

@@ -65,6 +65,7 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
     ports:
       - "5601:5601"
     healthcheck:
@@ -113,7 +114,7 @@ services:
       apm-server:
         condition: service_started
     environment:
-      - MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-apm-server:8200/v1/traces
+      - MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT=http://otel-apm-server:8200/v1/traces
       - MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0
     ports:
       - "8080:8080"
