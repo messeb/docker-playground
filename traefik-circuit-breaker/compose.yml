@@ -1,0 +1,40 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik-cb
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - cb-net
+
+  api:
+    build: ./api
+    container_name: api-cb
+    restart: unless-stopped
+    environment:
+      FAILURE_RATE: "0.35"
+    networks:
+      - cb-net
+
+  consumer:
+    build: ./consumer
+    container_name: consumer-cb
+    restart: "no"
+    environment:
+      API_URL: "http://traefik-cb/api"
+      REQUEST_COUNT: "60"
+      REQUEST_DELAY: "0.3"
+    depends_on:
+      - traefik
+      - api
+    networks:
+      - cb-net
+
+networks:
+  cb-net:
+    name: cb-net

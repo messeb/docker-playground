@@ -1,0 +1,27 @@
+http:
+  routers:
+    api:
+      rule: "PathPrefix(`/api`)"
+      entryPoints:
+        - web
+      middlewares:
+        - circuit-breaker
+      service: api
+
+  middlewares:
+    circuit-breaker:
+      circuitBreaker:
+        # Trip when more than 50% of all responses in the window are 5xx
+        expression: "ResponseCodeRatio(500, 600, 0, 600) > 0.5"
+        # How often the circuit breaker evaluates the expression
+        checkPeriod: 1s
+        # How long the circuit stays open before trying again (half-open)
+        fallbackDuration: 5s
+        # How long in half-open state before returning to closed
+        recoveryDuration: 5s
+
+  services:
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://api:8000"

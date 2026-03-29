@@ -15,3 +15,7 @@ Small Docker playgrounds for my daily work.
 | Local Kubernetes Setup | A fully local GitOps environment — no cloud, no GitHub account, no external services required. | [Link](./local-kubernetes-setup/) 
 | Nginx Webserver | Minimal Nginx static file server with custom config and health check | [nginx-webserver](./nginx-webserver/) |
 | Traefik Reverse Proxy | Path-based reverse proxy with Traefik using static file configuration | [traefik-reverse-proxy](./traefik-reverse-proxy/) |
+| Traefik Circuit Breaker | Circuit breaker middleware demo with Traefik and a fault-injecting backend | [traefik-circuit-breaker](./traefik-circuit-breaker/) |
+| Nginx Webserver | Minimal Nginx static file server with custom config and health check | [Link](./nginx-webserver/) |
+| Traefik Reverse Proxy | Path-based reverse proxy with Traefik using static file configuration | [Link](./traefik-reverse-proxy/) |
+| Traefik Circuit Breaker | Circuit breaker middleware demo with Traefik and a fault-injecting backend | [Link](./traefik-circuit-breaker/) |
