@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — Nginx Webserver</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <div class="logo">N</div>
+            <strong>nginx-webserver</strong>
+            <nav><a href="/">Home</a></nav>
+        </header>
+
+        <h1>About</h1>
+        <p>This playground shows how to run nginx as a static file server in Docker with production-relevant configuration.</p>
+
+        <h2>Location block types</h2>
+        <div class="card">
+            <div class="endpoint">
+                <span class="path">location /</span>
+                <span class="desc">Prefix match — catches all paths, uses <code>try_files</code></span>
+            </div>
+            <div class="endpoint">
+                <span class="path">location = /health</span>
+                <span class="desc">Exact match — fastest, used for fixed paths like health checks</span>
+            </div>
+            <div class="endpoint">
+                <span class="path">location ~* \.(css|js|...)$</span>
+                <span class="desc">Regex match (case-insensitive) — targets static asset extensions</span>
+            </div>
+        </div>
+
+        <h2>Response headers</h2>
+        <div class="card">
+            <div class="endpoint">
+                <span class="badge badge-blue">X-Content-Type-Options</span>
+                <span class="desc">Prevents MIME-type sniffing</span>
+            </div>
+            <div class="endpoint">
+                <span class="badge badge-blue">X-Frame-Options</span>
+                <span class="desc">Blocks clickjacking via iframes</span>
+            </div>
+            <div class="endpoint">
+                <span class="badge badge-blue">Referrer-Policy</span>
+                <span class="desc">Controls how much referrer info is sent with requests</span>
+            </div>
+            <div class="endpoint">
+                <span class="badge badge-orange">Cache-Control</span>
+                <span class="desc"><code>public, immutable</code> on static assets — CDN and browser friendly</span>
+            </div>
+        </div>
+
+        <footer>nginx:alpine · Docker Playground</footer>
+    </div>
+</body>
+</html>

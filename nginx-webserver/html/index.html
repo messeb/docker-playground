@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nginx Webserver — Docker Playground</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <div class="logo">N</div>
+            <strong>nginx-webserver</strong>
+            <nav><a href="/about.html">About</a></nav>
+        </header>
+
+        <h1>Nginx Webserver</h1>
+        <p>
+            A Docker playground demonstrating nginx as a static file server.
+            Each link below exercises a different nginx configuration feature —
+            open your browser's developer tools (Network tab) to inspect the response headers.
+        </p>
+
+        <h2>Use cases</h2>
+
+        <a class="card card-link" href="/about.html">
+            <div class="card-header">
+                <span class="badge badge-blue">Static page</span>
+                <span class="path">/about.html</span>
+            </div>
+            <p>A second HTML page served from <code>/usr/share/nginx/html</code>. Demonstrates the catch-all <code>location /</code> prefix block with <code>try_files</code> — nginx looks for the exact file, then a directory index, then returns 404.</p>
+        </a>
+
+        <a class="card card-link" href="/health" target="_blank">
+            <div class="card-header">
+                <span class="badge badge-green">Health check</span>
+                <span class="path">/health</span>
+            </div>
+            <p>Returns <code>{"status":"ok"}</code> as JSON without reading any file. Uses an exact match <code>location = /health</code> — the fastest location type in nginx, ideal for fixed paths like health probes used by Docker and load balancers.</p>
+        </a>
+
+        <a class="card card-link" href="/static/style.css" target="_blank">
+            <div class="card-header">
+                <span class="badge badge-orange">Cache headers</span>
+                <span class="path">/static/style.css</span>
+            </div>
+            <p>A CSS file served with <code>Cache-Control: public, immutable</code> and a 30-day expiry. Uses a regex location <code>~* \.(css|js|png|svg…)$</code> to match static asset extensions. The <code>immutable</code> flag tells browsers to skip revalidation entirely during the expiry window.</p>
+        </a>
+
+        <a class="card card-link" href="/missing" target="_blank">
+            <div class="card-header">
+                <span class="badge badge-red">Custom 404</span>
+                <span class="path">/missing</span>
+            </div>
+            <p>Triggers the custom 404 error page defined by <code>error_page 404 /404.html</code>. The error page location is marked <code>internal</code> so it cannot be requested directly — only nginx's own error handling can serve it.</p>
+        </a>
+
+        <a class="card card-link" href="/error-500" target="_blank">
+            <div class="card-header">
+                <span class="badge badge-red">Custom 500</span>
+                <span class="path">/error-500</span>
+            </div>
+            <p>Forces a 500 Internal Server Error via <code>return 500</code>, which nginx intercepts with <code>error_page 500 502 503 504 /50x.html</code> and serves the custom server error page. The same page would appear for real upstream failures (502, 503, 504).</p>
+        </a>
+
+        <h2>Response headers on this page</h2>
+        <div class="card">
+            <div class="endpoint">
+                <span class="badge badge-blue">Security</span>
+                <span class="desc"><code>X-Content-Type-Options: nosniff</code> — prevents MIME-type sniffing</span>
+            </div>
+            <div class="endpoint">
+                <span class="badge badge-blue">Security</span>
+                <span class="desc"><code>X-Frame-Options: SAMEORIGIN</code> — blocks clickjacking via iframes</span>
+            </div>
+            <div class="endpoint">
+                <span class="badge badge-blue">Security</span>
+                <span class="desc"><code>X-XSS-Protection: 1; mode=block</code> — legacy XSS filter for older browsers</span>
+            </div>
+            <div class="endpoint">
+                <span class="badge badge-blue">Security</span>
+                <span class="desc"><code>Referrer-Policy: same-origin</code> — only sends Referer on same-origin navigation</span>
+            </div>
+            <div class="endpoint">
+                <span class="badge badge-green">Compression</span>
+                <span class="desc"><code>Content-Encoding: gzip</code> — HTML, CSS, JS and JSON are compressed automatically</span>
+            </div>
+        </div>
+
+        <footer>nginx:alpine · Docker Playground · <a href="https://nginx.org/en/docs/" target="_blank">nginx docs</a></footer>
+    </div>
+</body>
+</html>
