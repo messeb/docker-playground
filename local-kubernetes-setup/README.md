@@ -38,6 +38,17 @@ http://localhost:8888 — updated within seconds
 
 ---
 
+## Clone only this subfolder
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/messeb/docker-playground.git \
+  && cd docker-playground \
+  && git sparse-checkout set local-kubernetes-setup \
+  && cd local-kubernetes-setup/
+```
+
+---
+
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) — must be running, 4 GB memory recommended
