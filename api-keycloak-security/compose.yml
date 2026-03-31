@@ -1,0 +1,98 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  # Stores bank accounts and transaction history.
+  # Init script seeds two demo accounts matching the Keycloak realm users.
+  postgres:
+    image: postgres:16-alpine
+    container_name: bank-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - bank-net
+
+  # ── Keycloak ────────────────────────────────────────────────────────────────
+  # Identity provider using embedded H2 (dev mode — no extra DB required).
+  # Realm is auto-imported from realm-export.json on first start.
+  #
+  # Admin UI : http://localhost:8180  (admin / admin)
+  # Token    : POST http://localhost:8180/realms/banking/protocol/openid-connect/token
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    container_name: bank-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KC_DB: dev-file
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    healthcheck:
+      # curl/wget are not available in the Keycloak image; use bash /dev/tcp instead.
+      # This sends a raw HTTP request and checks that the OIDC config endpoint
+      # returns a response containing "issuer" — confirming the realm is imported.
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/localhost/8080 &&
+          printf 'GET /realms/banking/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          cat <&3 | grep -q issuer
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+    networks:
+      - bank-net
+
+  # ── Go Banking API ──────────────────────────────────────────────────────────
+  # REST API secured with Keycloak JWTs.
+  # Validates tokens offline using cached JWKS — no per-request Keycloak calls.
+  #
+  # API : http://localhost:8080
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: bank-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      # Internal URL used by the API container to fetch JWKS keys
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/banking/protocol/openid-connect/certs
+      # External URL that appears in the 'iss' claim of tokens obtained via localhost
+      KEYCLOAK_ISSUER: http://localhost:8180/realms/banking
+      JWKS_REFRESH_INTERVAL: "300"
+      API_PORT: "8080"
+      API_PRIVATE_KEY_BASE64: ${API_PRIVATE_KEY_BASE64:-}
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - bank-net
+
+networks:
+  bank-net:
+    name: bank-net

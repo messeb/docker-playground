@@ -27,6 +27,7 @@ Hands-on Docker examples for real-world patterns — networking, proxying, resil
 | --- | --- |
 | [🛡️ Secure Docker Container](./secure-docker-container/) | Multi-stage build, non-root user, read-only filesystem, dropped capabilities — security hardening checklist in one Dockerfile. |
 | [🔑 Build-Time Secret Handover](./secret-handover/) | `RUN --mount=type=secret` vs `--build-arg` — why secrets passed as build args end up in the image history and how to avoid it. |
+| [🏦 API Keycloak Security](./api-keycloak-security/) | Go banking REST API secured with Keycloak (OIDC login, roles) and JWE token encryption — access tokens are RSA-encrypted so only the API can read the claims. |
 
 ### 📡 Messaging & Observability
 
