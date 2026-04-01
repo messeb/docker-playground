@@ -2,8 +2,8 @@
 # Build stage
 ###
 
-# Build the application using a Gradle image with Java 21
-FROM gradle:8.10-jdk21 AS build
+# Build the application using a Gradle image with Java 25
+FROM gradle:9.4.1-jdk25 AS build
 
 # Set the working directory in the container
 WORKDIR /app
@@ -28,8 +28,8 @@ RUN ./gradlew bootJar --no-daemon
 # Runtime stage
 ###
 
-# Create a lean production image with Java 21 JRE only
-FROM eclipse-temurin:21-jre-alpine
+# Create a lean production image with Java 25 JRE only
+FROM eclipse-temurin:25-jre-alpine
 
 # Create a non-root user 'spring' for security
 RUN addgroup -S spring && adduser -S spring -G spring -s /sbin/nologin
