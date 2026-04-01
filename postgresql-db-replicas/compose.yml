@@ -1,40 +1,73 @@
-version: "3.9"
-
 services:
   postgresql-write:
     image: bitnami/postgresql:latest
     container_name: postgresql-write
     restart: always
     ports:
-      - '5432:5432'
+      - "5432:5432"
     env_file:
       - ./postgresql-write/.env
     volumes:
       - ./postgresql-write/db-init.sql:/docker-entrypoint-initdb.d/init.sql
-  
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
   postgresql-read-replica-1:
     image: bitnami/postgresql:latest
     container_name: postgresql-read-replica-1
     restart: always
     ports:
-      - '5433:5432'
+      - "5433:5432"
     depends_on:
-      - postgresql-write
+      postgresql-write:
+        condition: service_healthy
     env_file:
       - ./postgresql-read/.env
-  
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
   postgresql-read-replica-2:
     image: bitnami/postgresql:latest
     container_name: postgresql-read-replica-2
     restart: always
     ports:
-      - '5434:5432'
+      - "5434:5432"
     depends_on:
-      - postgresql-write
+      postgresql-write:
+        condition: service_healthy
     env_file:
       - ./postgresql-read/.env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   client:
     build: ./client
     ports:
-      - "8080:8080"
+      - "8081:8080"
+    environment:
+      DB_WRITE_HOST: postgresql-write
+      DB_READ_HOST_1: postgresql-read-replica-1
+      DB_READ_HOST_2: postgresql-read-replica-2
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: service
+    depends_on:
+      postgresql-write:
+        condition: service_healthy
+      postgresql-read-replica-1:
+        condition: service_healthy
+      postgresql-read-replica-2:
+        condition: service_healthy
