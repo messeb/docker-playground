@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're In!</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="topnav">
+    <a href="/" class="topnav__brand">🚦 Queue Demo</a>
+    <div class="topnav__links">
+      <a href="/" class="topnav__link topnav__link--active">Home</a>
+      <a href="/about.html" class="topnav__link">About</a>
+      <a href="/features.html" class="topnav__link">Features</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="card">
+
+      <!-- Animated checkmark -->
+      <div class="check-wrapper">
+        <svg class="check-circle" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle class="check-circle__bg" cx="26" cy="26" r="25" fill="none"/>
+          <path class="check-circle__tick" fill="none" d="M14 27l8 8 16-16"/>
+        </svg>
+      </div>
+
+      <h1 class="heading">You're In!</h1>
+      <p class="subheading">Welcome to the protected page.<br>You've been admitted through the queue.</p>
+
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Access granted
+      </div>
+
+      <button class="leave-btn" id="leaveBtn">
+        Done — leave the protected page
+      </button>
+
+      <p class="caption">Queue-Based Access Demo &nbsp;·&nbsp; Docker Playground</p>
+
+    </div>
+  </div>
+  <script>
+    // Keep the active slot alive with a heartbeat ping every 10 seconds.
+    // The slot is held as long as heartbeats arrive; the server-side reaper
+    // frees it ~35 s after the last ping (tab closed / connection lost).
+    // No pagehide beacon here — it would fire on refresh and subpage navigation
+    // too, evicting the session unintentionally.
+    function ping() {
+      fetch('/api/session/heartbeat', { method: 'POST', credentials: 'same-origin' })
+        .catch(() => {});
+    }
+    ping();
+    setInterval(ping, 10_000);
+
+    // Explicit "done" button: free the active slot then show the confirmation
+    // page. The user re-enters the queue only when they explicitly click the
+    // "Re-enter" link on /done — avoiding an immediate re-admission race.
+    document.getElementById('leaveBtn').addEventListener('click', () => {
+      fetch('/api/session/leave', { method: 'POST', credentials: 'same-origin' })
+        .finally(() => { window.location.href = '/done'; });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+services:
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  # Stores all queue state: session hashes, queue list, active set,
+  # capacity counter, and admission timing history.
+  redis:
+    image: redis:7-alpine
+    container_name: queue-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - queue-net
+
+  # ── Queue Service (Go) ───────────────────────────────────────────────────────
+  # Handles all user-facing traffic: session gating, queue page, admin APIs,
+  # and reverse proxying admitted users to the target service.
+  queue-service:
+    build:
+      context: ./queue-service
+      dockerfile: Dockerfile
+    container_name: queue-service
+    restart: unless-stopped
+    ports:
+      - "80:8080"
+    environment:
+      REDIS_ADDR: redis:6379
+      TARGET_URL: http://target:80
+      QUEUE_CAPACITY: "3"
+      COOKIE_SECRET: "change-me-in-production-32-chars!!"
+      PORT: "8080"
+      WEB_DIR: "/web"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - queue-net
+
+  # ── Target (Nginx) ───────────────────────────────────────────────────────────
+  # Serves the protected page. No published ports — only reachable from
+  # queue-service over the internal network. Direct browser access is
+  # architecturally impossible without going through the queue.
+  target:
+    build:
+      context: ./target
+      dockerfile: Dockerfile
+    container_name: queue-target
+    restart: unless-stopped
+    # intentionally no "ports:" block — internal access only
+    networks:
+      - queue-net
+
+networks:
+  queue-net:
+    name: queue-net

@@ -1,0 +1,210 @@
+/* ── Reset & base ─────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;
+  --indigo-700: #4338ca;
+  --indigo-100: #e0e7ff;
+  --slate-50:   #f8fafc;
+  --slate-100:  #f1f5f9;
+  --slate-200:  #e2e8f0;
+  --slate-400:  #94a3b8;
+  --slate-500:  #64748b;
+  --slate-700:  #334155;
+  --slate-900:  #0f172a;
+  --white:      #ffffff;
+
+  --radius-card: 20px;
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / .07),
+                 0 10px 40px -5px rgb(79 70 229 / .12);
+  --transition:  .25s ease;
+  --font:        -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+                 Arial, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--slate-50);
+  color: var(--slate-700);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page layout ─────────────────────────────────────────────────────────── */
+
+.page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 40px 40px 32px;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+}
+
+/* ── Dots loader ─────────────────────────────────────────────────────────── */
+
+.dots-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.dots-loader span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--indigo-600);
+  animation: dot-wave 1.4s ease-in-out infinite;
+}
+
+.dots-loader span:nth-child(1) { animation-delay: 0s; }
+.dots-loader span:nth-child(2) { animation-delay: .2s; }
+.dots-loader span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes dot-wave {
+  0%, 60%, 100% { transform: translateY(0);    opacity: .35; }
+  30%            { transform: translateY(-10px); opacity: 1; }
+}
+
+/* ── Typography ──────────────────────────────────────────────────────────── */
+
+.heading {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  letter-spacing: -.02em;
+  margin-bottom: 8px;
+}
+
+.subheading {
+  font-size: .9375rem;
+  color: var(--slate-500);
+  margin-bottom: 36px;
+}
+
+/* ── Position display ────────────────────────────────────────────────────── */
+
+.position-block {
+  background: var(--slate-100);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.position-number {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--indigo-600);
+  line-height: 1;
+  margin-bottom: 6px;
+  transition: transform var(--transition);
+}
+
+.position-number.bump {
+  transform: scale(1.08);
+}
+
+.position-label {
+  font-size: .8125rem;
+  color: var(--slate-500);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+
+.progress-track {
+  height: 8px;
+  background: var(--slate-200);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--indigo-500), var(--indigo-700));
+  border-radius: 99px;
+  transition: width .6s ease;
+  min-width: 4%;
+}
+
+/* ── ETA ──────────────────────────────────────────────────────────────────── */
+
+.eta-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: .9375rem;
+  color: var(--slate-500);
+  margin-bottom: 28px;
+  min-height: 24px;
+}
+
+.eta-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--indigo-500);
+}
+
+/* ── Pulse dot + refresh note ─────────────────────────────────────────────── */
+
+.refresh-note {
+  font-size: .8125rem;
+  color: var(--slate-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: .5; transform: scale(.85); }
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+
+.footer {
+  margin-top: 28px;
+  font-size: .75rem;
+  color: var(--slate-400);
+  text-align: center;
+}

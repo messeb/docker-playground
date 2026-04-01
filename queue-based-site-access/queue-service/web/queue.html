@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waiting Room</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+
+      <!-- Animated dots loader -->
+      <div class="dots-loader" aria-label="Loading">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <h1 class="heading">You're in the waiting room</h1>
+      <p class="subheading">Please wait while we prepare your access</p>
+
+      <!-- Position display -->
+      <div class="position-block">
+        <div class="position-number" id="position" aria-live="polite">—</div>
+        <div class="position-label">
+          Position in queue &nbsp;·&nbsp; <span id="total">—</span> waiting
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="progress-fill" id="progress-fill" style="width: 4%"></div>
+      </div>
+
+      <!-- ETA -->
+      <div class="eta-block" id="eta-block">
+        <svg class="eta-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+        </svg>
+        <span id="eta-text">Calculating estimated wait…</span>
+      </div>
+
+      <p class="refresh-note">
+        <span class="dot" id="pulse-dot"></span>
+        Updating automatically
+      </p>
+
+    </div>
+
+    <footer class="footer">Queue-Based Access Demo &nbsp;·&nbsp; Docker Playground</footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

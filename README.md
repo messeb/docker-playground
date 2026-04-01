@@ -13,6 +13,7 @@ Hands-on Docker examples for real-world patterns — networking, proxying, resil
 | [⚖️ HAProxy Load Balancer](./haproxy-http-loadbalancer/) | Round-robin load balancing across multiple HTTP backends with HAProxy. |
 | [📄 Nginx Webserver](./nginx-webserver/) | Static file server with gzip compression, security headers, cache control, custom error pages, and structured access logs. |
 | [🧩 Varnish ESI](./varnish-edge-side-include/) | Edge Side Includes — assembling HTML pages from cached components using Varnish. |
+| [🚦 Queue-Based Site Access](./queue-based-site-access/) | Virtual waiting room in front of a protected page — Redis-backed FIFO queue, live position polling, ETA, atomic slot claiming, and a bypass-proof architecture where the target has no published port. |
 
 ### 🗄️ Data
 

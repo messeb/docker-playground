@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session Ended · Queue Demo</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .done-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 24px;
+      background: var(--slate-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .reenter-btn {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 12px 28px;
+      background: var(--indigo-600);
+      color: #fff;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: .9375rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .15s;
+    }
+
+    .reenter-btn:hover {
+      background: var(--indigo-500);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+
+      <div class="done-icon">👋</div>
+
+      <h1 class="heading" style="font-size:1.75rem;">Session ended</h1>
+      <p class="subheading">
+        Your slot has been released and the next person in line has been admitted.
+      </p>
+
+      <a href="/" class="reenter-btn">Re-enter the queue</a>
+
+      <p class="caption" style="margin-top:20px;">
+        Queue-Based Access Demo &nbsp;·&nbsp; Docker Playground
+      </p>
+
+    </div>
+  </div>
+</body>
+</html>

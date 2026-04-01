@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About · Queue Demo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="topnav">
+    <a href="/" class="topnav__brand">🚦 Queue Demo</a>
+    <div class="topnav__links">
+      <a href="/" class="topnav__link">Home</a>
+      <a href="/about.html" class="topnav__link topnav__link--active">About</a>
+      <a href="/features.html" class="topnav__link">Features</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="card card--wide">
+
+      <h1 class="heading">About this Demo</h1>
+      <p class="subheading">How the virtual waiting room works</p>
+
+      <div class="content">
+        <div class="content__block">
+          <h2 class="content__title">🏗️ Architecture</h2>
+          <p>A Go service sits in front of a protected Nginx page. Every incoming
+          request passes through a session gate — users without an active slot are
+          placed in a Redis-backed FIFO queue.</p>
+        </div>
+
+        <div class="content__block">
+          <h2 class="content__title">🔒 Bypass prevention</h2>
+          <p>The protected page has <strong>no published port</strong> in Docker
+          Compose. There is no TCP path from a browser to the target without going
+          through the queue service — bypassing is architecturally impossible.</p>
+        </div>
+
+        <div class="content__block">
+          <h2 class="content__title">💓 Session keepalive</h2>
+          <p>JavaScript pings a heartbeat endpoint every 10 seconds. A background
+          reaper evicts sessions that stop sending heartbeats, freeing their slot
+          for the next person in line within ~35 seconds.</p>
+        </div>
+      </div>
+
+      <p class="caption">Queue-Based Access Demo &nbsp;·&nbsp; Docker Playground</p>
+
+    </div>
+  </div>
+  <script>
+    function ping() {
+      fetch('/api/session/heartbeat', { method: 'POST', credentials: 'same-origin' })
+        .catch(() => {});
+    }
+    ping();
+    setInterval(ping, 10_000);
+  </script>
+</body>
+</html>

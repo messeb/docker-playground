@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features · Queue Demo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="topnav">
+    <a href="/" class="topnav__brand">🚦 Queue Demo</a>
+    <div class="topnav__links">
+      <a href="/" class="topnav__link">Home</a>
+      <a href="/about.html" class="topnav__link">About</a>
+      <a href="/features.html" class="topnav__link topnav__link--active">Features</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="card card--wide">
+
+      <h1 class="heading">Features</h1>
+      <p class="subheading">What this system provides out of the box</p>
+
+      <ul class="feature-list">
+        <li class="feature-list__item">
+          <span class="feature-list__icon">⚡</span>
+          <div>
+            <strong>Atomic slot claiming</strong>
+            <p>Redis Lua scripts ensure two concurrent visitors can never claim
+            the same last slot — check and write are a single atomic operation.</p>
+          </div>
+        </li>
+        <li class="feature-list__item">
+          <span class="feature-list__icon">📊</span>
+          <div>
+            <strong>Live position &amp; ETA</strong>
+            <p>The queue page polls every 2 seconds and shows your position,
+            total queue length, and an estimated wait time once 5 admissions
+            have been recorded.</p>
+          </div>
+        </li>
+        <li class="feature-list__item">
+          <span class="feature-list__icon">🔄</span>
+          <div>
+            <strong>Refresh-safe sessions</strong>
+            <p>Refreshing the protected page or the queue page never evicts your
+            session. Positions and active slots are preserved across reloads.</p>
+          </div>
+        </li>
+        <li class="feature-list__item">
+          <span class="feature-list__icon">🛠️</span>
+          <div>
+            <strong>Admin API</strong>
+            <p>Change capacity on the fly, release active slots, and inspect
+            live queue state — all via simple JSON endpoints.</p>
+          </div>
+        </li>
+      </ul>
+
+      <p class="caption">Queue-Based Access Demo &nbsp;·&nbsp; Docker Playground</p>
+
+    </div>
+  </div>
+  <script>
+    function ping() {
+      fetch('/api/session/heartbeat', { method: 'POST', credentials: 'same-origin' })
+        .catch(() => {});
+    }
+    ping();
+    setInterval(ping, 10_000);
+  </script>
+</body>
+</html>
