@@ -1,0 +1,9 @@
+[project]
+name = "service-a"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.136",
+    "uvicorn[standard]>=0.48",
+    "dapr>=1.17",
+]

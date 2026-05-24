@@ -1,0 +1,57 @@
+name: dapr-bindings-secrets
+
+services:
+  placement:
+    image: daprio/dapr:1.17.7
+    command: ["./placement", "--port", "50006"]
+    networks: [dapr-net]
+
+  handler:
+    build: ./handler
+    ports: ["8001:8000"]
+    networks:
+      dapr-net:
+        aliases: [handler]
+
+  handler-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=handler
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:handler"
+    depends_on: [handler, placement]
+
+  scheduler:
+    build: ./scheduler
+    ports: ["8002:8000"]
+    networks:
+      dapr-net:
+        aliases: [scheduler]
+
+  scheduler-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=scheduler
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:scheduler"
+    depends_on: [scheduler, placement]
+
+networks:
+  dapr-net:
+    driver: bridge

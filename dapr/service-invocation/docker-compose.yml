@@ -1,0 +1,61 @@
+name: dapr-service-invocation
+
+services:
+  placement:
+    image: daprio/dapr:1.17.7
+    command: ["./placement", "--port", "50006"]
+    networks: [dapr-net]
+
+  service-a:
+    build: ./service-a
+    ports: ["8001:8000"]
+    networks:
+      dapr-net:
+        aliases: [service-a]
+
+  service-a-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=service-a
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:service-a"
+    depends_on:
+      - service-a
+      - placement
+
+  service-b:
+    build: ./service-b
+    ports: ["8002:8000"]
+    networks:
+      dapr-net:
+        aliases: [service-b]
+
+  service-b-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=service-b
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:service-b"
+    depends_on:
+      - service-b
+      - placement
+
+networks:
+  dapr-net:
+    driver: bridge

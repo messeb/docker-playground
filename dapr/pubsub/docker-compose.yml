@@ -1,0 +1,63 @@
+name: dapr-pubsub
+
+services:
+  redis:
+    image: redis:8-alpine
+    networks: [dapr-net]
+
+  placement:
+    image: daprio/dapr:1.17.7
+    command: ["./placement", "--port", "50006"]
+    networks: [dapr-net]
+
+  publisher:
+    build: ./publisher
+    ports: ["8001:8000"]
+    networks:
+      dapr-net:
+        aliases: [publisher]
+    depends_on: [redis]
+
+  publisher-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=publisher
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:publisher"
+    depends_on: [publisher, placement, redis]
+
+  subscriber:
+    build: ./subscriber
+    ports: ["8002:8000"]
+    networks:
+      dapr-net:
+        aliases: [subscriber]
+    depends_on: [redis]
+
+  subscriber-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=subscriber
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:subscriber"
+    depends_on: [subscriber, placement, redis]
+
+networks:
+  dapr-net:
+    driver: bridge

@@ -1,0 +1,63 @@
+name: dapr-state-management
+
+services:
+  redis:
+    image: redis:8-alpine
+    networks: [dapr-net]
+
+  placement:
+    image: daprio/dapr:1.17.7
+    command: ["./placement", "--port", "50006"]
+    networks: [dapr-net]
+
+  writer:
+    build: ./writer
+    ports: ["8001:8000"]
+    networks:
+      dapr-net:
+        aliases: [writer]
+    depends_on: [redis]
+
+  writer-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=writer
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:writer"
+    depends_on: [writer, placement, redis]
+
+  reader:
+    build: ./reader
+    ports: ["8002:8000"]
+    networks:
+      dapr-net:
+        aliases: [reader]
+    depends_on: [redis]
+
+  reader-dapr:
+    image: daprio/daprd:1.17.7
+    command:
+      - ./daprd
+      - --app-id=reader
+      - --app-port=8000
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --placement-host-address=placement:50006
+      - --resources-path=/components
+      - --log-level=info
+    volumes:
+      - ./components:/components
+    network_mode: "service:reader"
+    depends_on: [reader, placement, redis]
+
+networks:
+  dapr-net:
+    driver: bridge

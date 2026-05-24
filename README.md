@@ -43,6 +43,12 @@ Hands-on Docker examples for real-world patterns — networking, proxying, resil
 | --- | --- |
 | [⎈ Local Kubernetes + ArgoCD](./local-kubernetes-setup/) | Fully local GitOps environment with kind, ArgoCD, and a local Git server — no cloud account needed. |
 
+### 🧩 Distributed Runtime
+
+| Project | What it demonstrates |
+| --- | --- |
+| [🧱 Dapr Examples](./dapr/) | Four runnable examples covering Dapr's core building blocks — **service invocation** (app-id discovery, mTLS-capable), **state management** (Redis-backed shared key-value store), **pub/sub** (CloudEvent envelopes via programmatic subscription), and **input bindings + secret store** (cron-triggered handler, file-backed secrets). Each uses FastAPI + a `daprd` sidecar over `network_mode: service:<app>`. |
+
 ---
 
 ## 🚀 Quick start
