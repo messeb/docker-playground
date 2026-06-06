@@ -1,0 +1,247 @@
+{
+  "realm": "banking-mfa",
+  "displayName": "Banking (MFA)",
+  "enabled": true,
+  "loginWithEmailAllowed": true,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "sslRequired": "none",
+
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "banking@localhost",
+    "fromDisplayName": "Banking MFA",
+    "ssl": "false",
+    "starttls": "false",
+    "auth": "false"
+  },
+
+  "roles": {
+    "realm": [
+      { "name": "user",  "description": "Standard banking user",   "composite": false, "clientRole": false },
+      { "name": "admin", "description": "Banking administrator",   "composite": false, "clientRole": false }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "banking-spa",
+      "name": "Banking SPA",
+      "description": "Public PKCE client for the banking demo SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "redirectUris": ["http://localhost:8080/callback.html"],
+      "webOrigins": ["http://localhost:8080"],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "bank-account-number",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "bank_account_number",
+            "claim.name": "bank_account_number",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "mfa-verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "mfa_enabled",
+            "claim.name": "mfa_verified",
+            "jsonType.label": "boolean",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "mfa-method",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "mfa_method",
+            "claim.name": "mfa_method",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+
+  "users": [
+    {
+      "username": "alice",
+      "email": "alice@example.com",
+      "firstName": "Alice",
+      "lastName": "Demo",
+      "emailVerified": true,
+      "enabled": true,
+      "attributes": {
+        "bank_account_number": ["BANK-0001-2024"],
+        "mfa_enabled": ["true"],
+        "mfa_method": ["email"]
+      },
+      "credentials": [
+        { "type": "password", "value": "alice123", "temporary": false }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "bob",
+      "email": "bob@example.com",
+      "firstName": "Bob",
+      "lastName": "Admin",
+      "emailVerified": true,
+      "enabled": true,
+      "attributes": {
+        "bank_account_number": ["BANK-0002-2024"],
+        "mfa_enabled": ["true"],
+        "mfa_method": ["email"]
+      },
+      "credentials": [
+        { "type": "password", "value": "bob123", "temporary": false }
+      ],
+      "realmRoles": ["user", "admin"]
+    },
+    {
+      "username": "carol",
+      "email": "carol@example.com",
+      "firstName": "Carol",
+      "lastName": "NoMFA",
+      "emailVerified": true,
+      "enabled": true,
+      "attributes": {
+        "bank_account_number": ["BANK-0003-2024"]
+      },
+      "credentials": [
+        { "type": "password", "value": "carol123", "temporary": false }
+      ],
+      "realmRoles": ["user"]
+    }
+  ],
+
+  "authenticationFlows": [
+    {
+      "alias": "browser-mfa",
+      "description": "Browser flow: password + conditional email OTP",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false
+        },
+        {
+          "authenticator": "identity-provider-redirector",
+          "requirement": "ALTERNATIVE",
+          "priority": 25,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false
+        },
+        {
+          "flowAlias": "browser-mfa forms",
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "userSetupAllowed": false,
+          "authenticatorFlow": true
+        }
+      ]
+    },
+    {
+      "alias": "browser-mfa forms",
+      "description": "Username + password, then conditional email OTP",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-username-password-form",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false
+        },
+        {
+          "flowAlias": "browser-mfa otp",
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": true
+        }
+      ]
+    },
+    {
+      "alias": "browser-mfa otp",
+      "description": "Email OTP — runs only when user has mfa_enabled=true",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-attribute",
+          "authenticatorConfig": "mfa-on-attribute",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false
+        },
+        {
+          "authenticator": "email-authenticator",
+          "authenticatorConfig": "email-otp-config",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false
+        }
+      ]
+    }
+  ],
+
+  "authenticatorConfig": [
+    {
+      "alias": "email-otp-config",
+      "config": {
+        "length": "6",
+        "ttl": "300"
+      }
+    },
+    {
+      "alias": "mfa-on-attribute",
+      "config": {
+        "attribute_name": "mfa_enabled",
+        "attribute_expected_value": "true",
+        "not": "false"
+      }
+    }
+  ],
+
+  "browserFlow": "browser-mfa"
+}

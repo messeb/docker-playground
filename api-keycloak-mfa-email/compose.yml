@@ -1,0 +1,146 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:18-alpine
+    container_name: bank-mfa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - bank-mfa-net
+
+  # ── Mailpit ─────────────────────────────────────────────────────────────────
+  mailpit:
+    image: axllent/mailpit:v1.30.1
+    container_name: bank-mfa-mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    networks:
+      - bank-mfa-net
+
+  # ── Keycloak ────────────────────────────────────────────────────────────────
+  keycloak:
+    build:
+      context: ./keycloak
+      dockerfile: Dockerfile
+    container_name: bank-mfa-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KC_DB: dev-file
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - keycloak-data:/opt/keycloak/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/localhost/8080 &&
+          printf 'GET /realms/banking-mfa/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          cat <&3 | grep -q issuer
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+    networks:
+      - bank-mfa-net
+
+  # ── API ─────────────────────────────────────────────────────────────────────
+  # Internal only. Identity arrives as HMAC-signed X-* headers from the wrapper.
+  # Production: replace HMAC with SPIFFE mTLS — see README "Going production-ready".
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: bank-mfa-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      API_PORT: "8080"
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_TARGET_REALM: banking-mfa
+      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      SMTP_HOST: mailpit:1025
+      SMTP_FROM: no-reply@banking.local
+      WRAPPER_HMAC_SECRET: ${WRAPPER_HMAC_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - bank-mfa-net
+
+  # ── authz ───────────────────────────────────────────────────────────────────
+  authz:
+    build:
+      context: ./authz
+      dockerfile: Dockerfile
+    container_name: bank-mfa-authz
+    restart: unless-stopped
+    environment:
+      AUTHZ_PORT: "9000"
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/banking-mfa/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER: http://localhost:8180/realms/banking-mfa
+      JWKS_REFRESH_INTERVAL: "300"
+      API_PUBLIC_KEY_URL: http://api:8080/.well-known/jwks.json
+      AUTHZ_PRIVATE_KEY_BASE64: ${AUTHZ_PRIVATE_KEY_BASE64:-}
+      WRAPPER_HMAC_SECRET: ${WRAPPER_HMAC_SECRET}
+      KEYCLOAK_TOKEN_URL: http://keycloak:8080/realms/banking-mfa/protocol/openid-connect/token
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks:
+      - bank-mfa-net
+
+  # ── nginx ───────────────────────────────────────────────────────────────────
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: bank-mfa-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      authz:
+        condition: service_started
+      api:
+        condition: service_started
+    networks:
+      - bank-mfa-net
+
+volumes:
+  keycloak-data:
+    name: bank-mfa-keycloak-data
+
+networks:
+  bank-mfa-net:
+    name: bank-mfa-net

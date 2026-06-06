@@ -29,6 +29,7 @@ Hands-on Docker examples for real-world patterns — networking, proxying, resil
 | [🛡️ Secure Docker Container](./secure-docker-container/) | Multi-stage build, non-root user, read-only filesystem, dropped capabilities — security hardening checklist in one Dockerfile. |
 | [🔑 Build-Time Secret Handover](./secret-handover/) | `RUN --mount=type=secret` vs `--build-arg` — why secrets passed as build args end up in the image history and how to avoid it. |
 | [🏦 API Keycloak Security](./api-keycloak-security/) | Go banking REST API secured with Keycloak (OIDC login, roles) and JWE token encryption — access tokens are RSA-encrypted so only the API can read the claims. |
+| [📧 API Keycloak MFA (email)](./api-keycloak-mfa-email/) | Same banking API plus **email-based MFA** (Keycloak browser flow with a 6-digit code caught by Mailpit), an `mfa_verified` claim in the JWT, and an **nginx edge re-encryption hop** — Keycloak emits a JWS, an `auth_request` Go sidecar validates it and re-wraps it as a JWE for the API. |
 
 ### 📡 Messaging & Observability
 

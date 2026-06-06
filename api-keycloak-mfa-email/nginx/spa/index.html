@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Banking · MFA Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7fb;
+    --fg: #111;
+    --muted: #6b7280;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary: #4b5563;
+    --secondary-hover: #374151;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --success: #059669;
+    --warning-bg: #fff7ed;
+    --warning-border: #fdba74;
+    --warning-fg: #9a3412;
+    --success-bg: #ecfdf5;
+    --success-border: #6ee7b7;
+    --success-fg: #065f46;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0f17; --fg: #e5e7eb; --muted: #9ca3af;
+      --card: #111827; --border: #1f2937;
+      --warning-bg: #2a1a08; --warning-border: #b45309; --warning-fg: #fde68a;
+      --success-bg: #052e22; --success-border: #047857; --success-fg: #a7f3d0;
+    }
+  }
+  * { box-sizing: border-box; }
+  /* Author stylesheets beat the UA [hidden] rule when an element has its
+     own display rule (e.g. `.header { display: flex }`). Restore it. */
+  [hidden] { display: none !important; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    max-width: 820px; margin: 0 auto; padding: 2rem 1.25rem 4rem;
+    line-height: 1.5; background: var(--bg); color: var(--fg);
+  }
+  h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+  h2 { margin: 0 0 .9rem; font-size: 1.05rem; color: var(--muted);
+       text-transform: uppercase; letter-spacing: .06em; }
+  .muted { color: var(--muted); }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
+  }
+  .header {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .header .who { flex: 1; min-width: 0; }
+  .header .who p { margin: 0; }
+  .header .who p.username { font-weight: 600; font-size: 1.05rem; }
+  .badge {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .25rem .65rem; border-radius: 999px;
+    font-size: .85rem; font-weight: 600; white-space: nowrap;
+  }
+  .badge.on  { background: var(--success-bg); color: var(--success-fg);
+               border: 1px solid var(--success-border); }
+  .badge.off { background: var(--warning-bg); color: var(--warning-fg);
+               border: 1px solid var(--warning-border); }
+  .alert {
+    background: var(--warning-bg); color: var(--warning-fg);
+    border: 1px solid var(--warning-border); padding: 1rem 1.1rem;
+    border-radius: 10px; display: flex; align-items: center; gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .alert .grow { flex: 1; min-width: 200px; }
+  .alert strong { display: block; margin-bottom: .15rem; font-size: 1rem; }
+  .alert p { margin: 0; font-size: .9rem; }
+  button {
+    background: var(--primary); color: white; border: 0;
+    padding: .65rem 1rem; border-radius: 8px; font-size: .95rem;
+    cursor: pointer; font-weight: 500; transition: background .12s;
+  }
+  button:hover { background: var(--primary-hover); }
+  button.secondary { background: var(--secondary); }
+  button.secondary:hover { background: var(--secondary-hover); }
+  button.danger { background: var(--danger); }
+  button.danger:hover { background: var(--danger-hover); }
+  button.ghost {
+    background: transparent; color: var(--fg);
+    border: 1px solid var(--border);
+  }
+  button.ghost:hover { background: var(--border); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .grid { display: grid; gap: .55rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .danger-note {
+    background: var(--warning-bg); color: var(--warning-fg);
+    border: 1px solid var(--warning-border);
+    padding: .6rem .8rem; border-radius: 8px; font-size: .9rem;
+    margin: 0 0 .8rem;
+  }
+  pre {
+    background: rgba(127,127,127,.1); padding: .9rem; border-radius: 8px;
+    overflow-x: auto; font-size: .88rem; margin: 0;
+  }
+  code { font-family: SFMono-Regular, Menlo, monospace; }
+  dialog {
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--card); color: var(--fg);
+    padding: 1.5rem; max-width: 480px; width: 90%;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.55); }
+  dialog h3 { margin-top: 0; }
+  dialog .row { margin: .75rem 0; }
+  dialog input[type=email], dialog input[type=text] {
+    width: 100%; padding: .6rem; border-radius: 8px;
+    border: 1px solid var(--border); font-size: 1rem; background: var(--bg);
+    color: var(--fg); box-sizing: border-box;
+  }
+  dialog #mfaCode {
+    font-size: 1.25rem; letter-spacing: .4em; text-align: center;
+  }
+  dialog .actions {
+    display: flex; gap: .5rem; justify-content: flex-end; margin-top: 1rem;
+  }
+  .pill {
+    display: inline-block; padding: .1rem .55rem; border-radius: 999px;
+    font-size: .85rem; background: #fde68a; color: #78350f;
+  }
+</style>
+</head>
+<body>
+
+<div class="card header" id="loggedOut" hidden>
+  <div class="who">
+    <h1>🏦 Banking · Demo</h1>
+    <p class="muted">Sign in with Keycloak to try the API.</p>
+  </div>
+  <button id="loginBtn">Login</button>
+</div>
+
+<div id="loggedIn" hidden>
+  <div class="card header">
+    <div class="who">
+      <p class="username">Signed in as <code id="who">—</code></p>
+    </div>
+    <span id="mfaBadge" class="badge off">🔓 MFA off</span>
+    <button id="logoutBtn" class="ghost">Logout</button>
+  </div>
+
+  <div id="mfaPromptCard" class="card" hidden>
+    <div class="alert">
+      <div class="grow">
+        <strong>MFA is not enabled for your account.</strong>
+        <p>Read-only calls work. Deposits and withdrawals will trigger a one-time email code.</p>
+      </div>
+      <button id="enableMfaBtn">Enable MFA</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Read-only</h2>
+    <div class="grid">
+      <button class="secondary" data-call="/api/v1/mfa/status">GET /mfa/status</button>
+      <button class="secondary" data-call="/api/v1/accounts/me">GET /accounts/me</button>
+      <button class="secondary" data-call="/api/v1/accounts/me/transactions">GET /transactions</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Write — requires MFA</h2>
+    <p id="writeMfaNote" class="danger-note" hidden>
+      ⚠ These buttons require multi-factor authentication. Clicking opens the
+      enrollment dialog before the request fires.
+    </p>
+    <div class="grid">
+      <button class="write-btn" data-post="/api/v1/accounts/me/deposit"  data-body='{"amount":100}'>POST deposit · 100</button>
+      <button class="write-btn" data-post="/api/v1/accounts/me/withdraw" data-body='{"amount":50}'>POST withdraw · 50</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Response</h2>
+    <pre id="out">(no calls yet)</pre>
+  </div>
+</div>
+
+<dialog id="mfaDialog">
+  <h3>🔐 Step up — email MFA</h3>
+  <p>This action needs multi-factor authentication. Verify a one-time code
+     sent to your inbox; you'll stay logged in.</p>
+
+  <div id="mfaStepEmail">
+    <div class="row">
+      <label for="mfaEmail">Email address for the one-time code</label>
+      <input id="mfaEmail" type="email" required>
+    </div>
+    <p id="mfaDialogMsg" class="muted"></p>
+    <div class="actions">
+      <button class="ghost" id="mfaCancel">Cancel</button>
+      <button id="mfaSendCode">Send code</button>
+    </div>
+  </div>
+
+  <div id="mfaStepCode" hidden>
+    <div class="row">
+      <label for="mfaCode">6-digit code sent to <span id="mfaSentTo" class="pill">—</span></label>
+      <input id="mfaCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6">
+    </div>
+    <p id="mfaDialogMsg2" class="muted">
+      In dev the code arrives at <a href="http://localhost:8025" target="_blank">Mailpit</a>.
+    </p>
+    <div class="actions">
+      <button class="ghost" id="mfaBack">Use different email</button>
+      <button id="mfaVerify">Verify</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="/app.js"></script>
+</body>
+</html>
